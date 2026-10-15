@@ -100,6 +100,7 @@ sys_kill(void)
 
 // return how many clock tick interrupts have occurred
 // since start.
+
 uint64
 sys_uptime(void)
 {
@@ -109,4 +110,23 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_settickets(void)
+{
+  int number;
+
+  argint(0, &number);
+
+  if(number < 1)
+    return -1;
+
+  struct proc *p = myproc();
+
+  acquire(&p->lock);
+  p->tickets = number;
+  release(&p->lock);
+
+  return 0;
 }
