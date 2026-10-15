@@ -39,6 +39,19 @@ trabalhar(int tickets, int fd)
 int
 main(void)
 {
+
+  printf("Testando valores invalidos...\n");
+
+  if(settickets(0) == -1)
+    printf("PASSOU: 0 tickets rejeitado\n");
+  else
+    printf("FALHOU: 0 tickets aceito\n");
+
+  if(settickets(-5) == -1)
+    printf("PASSOU: -5 tickets rejeitado\n");
+  else
+    printf("FALHOU: -5 tickets aceito\n");
+
   int pipeA[2];
   int pipeB[2];
 
