@@ -454,8 +454,8 @@ scheduler(void)
       release(&p->lock);
     }
 
-    // Nao ha processos prontos
     if(total == 0) {
+      asm volatile("wfi");
       continue;
     }
 
