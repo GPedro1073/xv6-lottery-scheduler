@@ -36,35 +36,33 @@ It then generates a pseudorandom number and iterates through the process table a
 
 Processes with more tickets have a higher probability of being selected.
 
-## How to Run
+## Dependencies and build
 
-The project requires a RISC-V toolchain and QEMU.
-
-Start xv6 with one virtual CPU:
+On Ubuntu 24.04, install any missing tools. The Makefile requires QEMU 7.2 or later.
 
 ```bash
+sudo apt update
+sudo apt install git build-essential gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu qemu-system-misc perl bc
+git clone https://github.com/GPedro1073/xv6-lottery-scheduler.git
+cd xv6-lottery-scheduler
+make kernel/kernel fs.img
 make qemu CPUS=1
 ```
 
-Inside xv6, run:
+The kernel gives newly allocated processes 10 tickets. Children inherit their parent's tickets through `fork()`. The `settickets(n)` system call updates the current process's tickets and returns `-1` when `n < 1`.
 
-```text
-lotterytest
-```
+## xv6 tests
 
-Or run the three-process test:
+At the xv6 prompt, run `lotterytest` and `lottery3` in sequence. To exit QEMU, press `Ctrl+A` and then `X`.
 
-```text
-lottery3
-```
+- `lotterytest` should print `PASSOU` for 0 and -5 tickets. The two processes with 50 tickets should complete similar numbers of operations.
+- `lottery3` uses 30, 25, and 90 tickets. Expected lottery win shares are 20.7%, 17.2%, and 62.1% while all three processes are runnable.
 
-To exit QEMU, press `Ctrl + A`, release both keys, and press `X`.
+Use one virtual CPU so the processes compete for the same core. Repeat the test and compare the raw operation counts. The distribution is probabilistic, and the ratios printed by the programs use integer division.
 
-## Test Results
+### Historical result
 
-Several tests were performed using different ticket distributions.
-
-### Three-Process Test
+One run recorded during development used the earlier 10, 30, and 60 ticket configuration.
 
 | Process | Tickets | Operations |
 |---|---:|---:|
@@ -72,15 +70,9 @@ Several tests were performed using different ticket distributions.
 | B | 30 | 3,501,700,000 |
 | C | 60 | 5,418,330,000 |
 
-The results showed that processes with more tickets generally performed more operations during the test interval.
+## Limitations
 
-Additional tests were performed using two processes and invalid ticket values.
-
-These measurements provide initial evidence of proportional scheduling behavior but do not guarantee exact CPU distribution under all conditions.
-
-## Known Limitations
-
-The implementation was tested using one and two virtual CPUs. Further improvements to synchronization and concurrency handling may be necessary for greater robustness.
+The project was exercised during development with one and two virtual CPUs. With multiple CPUs, the set of runnable processes can change between summing tickets and selecting a winner.
 
 ## Credits and Acknowledgments
 

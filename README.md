@@ -36,51 +36,43 @@ Em seguida, gera um número pseudoaleatório e percorre novamente os processos, 
 
 Quanto maior a quantidade de tickets de um processo, maior sua probabilidade de ser escolhido.
 
-## Como executar
+## Dependências e compilação
 
-O projeto utiliza a arquitetura RISC-V e requer as ferramentas de compilação apropriadas, além do QEMU.
-
-Para iniciar o XV6 com uma CPU virtual:
+No Ubuntu 24.04, instale as ferramentas se estiverem faltando. O Makefile requer QEMU 7.2 ou superior.
 
 ```bash
+sudo apt update
+sudo apt install git build-essential gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu qemu-system-misc perl bc
+git clone https://github.com/GPedro1073/xv6-lottery-scheduler.git
+cd xv6-lottery-scheduler
+make kernel/kernel fs.img
 make qemu CPUS=1
 ```
 
-Dentro do XV6, execute:
+O kernel dá 10 tickets a processos recém-alocados. Um filho herda os tickets do pai via `fork()`. A chamada `settickets(n)` altera os tickets do processo atual e retorna `-1` quando `n < 1`.
 
-```bash
-lotterytest
-```
+## Testes no xv6
 
-Ou, para testar três processos:
+No prompt do xv6, execute `lotterytest` e `lottery3` em sequência. Para sair do QEMU, pressione `Ctrl+A` e depois `X`.
 
-```bash
-lottery3
-```
+- `lotterytest` deve imprimir `PASSOU` para 0 e -5 tickets. Os dois processos com 50 tickets devem realizar quantidades semelhantes de operações.
+- `lottery3` usa 30, 25 e 90 tickets. Os valores de referência são 20,7%, 17,2% e 62,1% dos sorteios enquanto os três processos estão prontos.
 
-Para sair do QEMU, pressione `Ctrl + A`, solte e pressione `X`.
+Use uma CPU virtual para que os processos concorram pelo mesmo núcleo. Repita o teste e compare os contadores brutos de operações. A distribuição é probabilística e as razões impressas pelos programas usam divisão inteira.
 
-## Resultados dos testes
+### Resultado histórico
 
-Foram realizados testes com diferentes quantidades de tickets.
+Uma execução registrada durante o desenvolvimento usou a configuração anterior de 10, 30 e 60 tickets.
 
-### Teste com três processos
-
-| Processo | Tickets | Operações realizadas |
+| Processo | Tickets | Operações |
 |---|---:|---:|
 | A | 10 | 1.178.090.000 |
 | B | 30 | 3.501.700.000 |
 | C | 60 | 5.418.330.000 |
 
-Os resultados demonstraram que os processos com mais tickets realizaram mais operações durante o intervalo de teste.
-
-Também foram realizados testes com dois processos e com valores inválidos na chamada `settickets()`.
-
-Os testes representam uma avaliação inicial do escalonador, não uma garantia de distribuição exata de CPU em todas as condições.
-
 ## Limitações
 
-A implementação foi validada em cenários acadêmicos com uma e duas CPUs virtuais. Ainda existem pontos de sincronização e concorrência que podem ser aprimorados para garantir maior robustez.
+O projeto foi experimentado durante o desenvolvimento com uma e duas CPUs virtuais. Com várias CPUs, o conjunto de processos prontos pode mudar entre a soma dos tickets e a seleção do vencedor.
 
 ## Créditos
 
